@@ -12,8 +12,6 @@ def chaotic_verify(login, proof, attestation_quote, nonce, timestamp):
     """
     
     # 1. Prepare payload for the Chaotic FastAPI
-    # This URL must be accessible to your Frappe Cloud site
-    # Use ngrok or a public IP for development
     fastapi_url = frappe.conf.get("chaotic_api_url", "http://localhost:8000/api/auth/verify")
     
     payload = {
@@ -25,37 +23,54 @@ def chaotic_verify(login, proof, attestation_quote, nonce, timestamp):
     }
     
     try:
-        # 2. Forward to the Chaotic Verification Authority
-        response = requests.post(
-            fastapi_url, 
-            json=payload, 
-            timeout=10
-        )
-        
+        response = requests.post(fastapi_url, json=payload, timeout=10)
         result = response.json()
         
         if result.get("success"):
-            # 3. SUCCESS: The hardware + ZK proof is valid.
-            # We now log the user into Frappe WITHOUT a password.
-            
-            # Use LoginManager to initialize the session for the given 'login' (email/username)
+            # SUCCESS: Hardware + ZK proof validated.
             login_manager = LoginManager()
             login_manager.user = login
             login_manager.post_login()
             
-            # Return success to the frontend JS
-            return {
-                "success": True,
-                "message": "Hardware Authentication Successful. Redirecting...",
-                "sid": frappe.session.sid  # Return the session ID
-            }
+            return {"success": True, "message": "Hardware Authentication Successful."}
         else:
-            # FAILURE: Invalid proof or device
-            frappe.throw(_("Hardware Authentication Failed: {0}").format(result.get("error", "Unknown error")))
+            frappe.throw(_("Hardware Authentication Failed: {0}").format(result.get("error", "Invalid Proof")))
 
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Chaotic Auth Error")
-        return {
-            "success": False,
-            "message": f"Connection to Chaotic Authority failed: {str(e)}"
-        }
+        return {"success": False, "message": f"Connection to Chaotic Authority failed: {str(e)}"}
+
+@frappe.whitelist()
+def chaotic_register_device(attestation_quote, public_key):
+    """
+    Enrolls the current logged-in user's hardware device.
+    Links the TPM identity to the Frappe User account.
+    """
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw(_("You must be logged in to register a device."))
+
+    # Verify and map on the FastAPI backend
+    fastapi_url = frappe.conf.get("chaotic_api_url", "http://localhost:8000/api/auth/register")
+    
+    payload = {
+        "user_id": user,
+        "attestation": attestation_quote,
+        "public_key": public_key
+    }
+    
+    try:
+        response = requests.post(fastapi_url, json=payload, timeout=10)
+        result = response.json()
+        
+        if result.get("success"):
+            # Store the hardware ID on the User profile (Custom Field)
+            frappe.db.set_value("User", user, "chaotic_device_id", result.get("device_id"))
+            frappe.db.commit()
+            return {"success": True, "message": "Device Registered Successfully!"}
+        else:
+            frappe.throw(_("Device Registration Failed: {0}").format(result.get("error", "Invalid Hardware")))
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Chaotic Registration Error")
+        return {"success": False, "message": str(e)}

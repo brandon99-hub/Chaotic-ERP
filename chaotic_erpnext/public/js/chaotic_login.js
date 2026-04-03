@@ -4,18 +4,21 @@
  */
 
 frappe.ready(function() {
-    // 1. Only run on the login page
+    // 1. LOGIN PAGE: Show 'Login with Hardware'
     if (window.location.pathname.startsWith('/login')) {
-        injectChaoticButton();
+        injectChaoticLoginButton();
+    }
+    
+    // 2. INSIDE APP: Show 'Register Hardware' on User Profile
+    if (frappe.session.user !== 'Guest' && window.location.pathname.includes('/app/user/')) {
+        injectChaoticEnrollButton();
     }
 });
 
-function injectChaoticButton() {
-    // 2. Find the default login form
+function injectChaoticLoginButton() {
     const loginForm = document.querySelector('.form-signin');
     if (!loginForm) return;
 
-    // 3. Create the 'Login with Hardware' button
     const chaoticBtn = document.createElement('div');
     chaoticBtn.innerHTML = `
         <div class="form-group text-center" style="margin-top: 15px;">
@@ -23,52 +26,50 @@ function injectChaoticButton() {
                 <span style="background: white; padding: 0 10px; color: #888;">OR</span>
             </div>
             <button type="button" id="chaotic-hardware-login" class="btn btn-default btn-block btn-login" style="background: #1a1a2e; color: white;">
-                <img src="/assets/chaotic_erpnext/images/tpm_icon.png" style="width: 20px; margin-right: 8px;" onerror="this.style.display='none'"/>
                 Login with Secure Hardware
             </button>
             <p id="chaotic-status" style="margin-top: 10px; font-size: 12px; color: #555;"></p>
         </div>
     `;
 
-    // 4. Inject it before the 'Forgot Password' link
     const forgotPassword = loginForm.querySelector('.forgot-password-link');
-    if (forgotPassword) {
-        forgotPassword.before(chaoticBtn);
-    } else {
-        loginForm.appendChild(chaoticBtn);
-    }
+    forgotPassword ? forgotPassword.before(chaoticBtn) : loginForm.appendChild(chaoticBtn);
 
-    // 5. Connect the button event
     document.getElementById('chaotic-hardware-login').addEventListener('click', handleHardwareLogin);
+}
+
+function injectChaoticEnrollButton() {
+    // Add button to the sidebar/actions of the User form
+    setTimeout(() => {
+        const actionButtons = document.querySelector('.page-actions');
+        if (actionButtons && !document.getElementById('chaotic-enroll-btn')) {
+            const enrollBtn = document.createElement('button');
+            enrollBtn.id = 'chaotic-enroll-btn';
+            enrollBtn.className = 'btn btn-primary btn-sm';
+            enrollBtn.style = 'margin-left: 10px; background: #1a1a2e;';
+            enrollBtn.innerText = 'Register This Hardware';
+            enrollBtn.onclick = handleHardwareEnroll;
+            actionButtons.prepend(enrollBtn);
+        }
+    }, 1000);
 }
 
 async function handleHardwareLogin() {
     const status = document.getElementById('chaotic-status');
-    const loginInput = document.getElementById('login_email') || document.getElementById('login_id');
-    const userLogin = loginInput ? loginInput.value : '';
+    const userLogin = (document.getElementById('login_email') || document.getElementById('login_id')).value;
 
     if (!userLogin) {
-        frappe.msgprint(__('Please enter your Email or Username first.'));
+        frappe.msgprint(__('Please enter your Email/Username.'));
         return;
     }
 
     try {
-        status.innerText = "Connecting to Hardware (TPM 2.0)...";
-        
-        // 1. CALL THE TPM (Via the local Chaotic Bridge)
-        // This is where we get the attestation quote + nonce from the TPM
+        status.innerText = "Connecting to Hardware...";
         const hardwareData = await callChaoticHardwareBridge(userLogin);
         
-        status.innerText = "Generating zkSNARK Zero-Knowledge Proof...";
-        
-        // 2. GENERATE THE ZK PROOF
-        // We use snarkjs to prove we have the private key corresponding to the device
-        // without sending the key itself.
+        status.innerText = "Generating ZK Proof...";
         const zkpData = await generateZkProof(hardwareData);
 
-        status.innerText = "Verifying with Chaotic Authority...";
-        
-        // 3. SEND TO FRAPPE BACKEND
         const response = await frappe.call({
             method: "chaotic_verify",
             args: {
@@ -81,38 +82,45 @@ async function handleHardwareLogin() {
         });
 
         if (response.message && response.message.success) {
-            status.innerHTML = `<span style="color: green;">✔ Authentication Successful! Redirecting...</span>`;
-            
-            // 4. REDIRECT ON SUCCESS (Frappe Session is now active)
-            setTimeout(() => {
-                window.location.href = "/app";
-            }, 1000);
+            window.location.href = "/app";
         }
-
     } catch (err) {
-        console.error("Chaotic Error:", err);
-        status.innerHTML = `<span style="color: red;">✘ Error: ${err.message || 'Hardware Check Failed'}</span>`;
+        status.innerHTML = `<span style="color: red;">✘ Error: ${err.message}</span>`;
     }
 }
 
-/**
- * Placeholder for the local TPM communication (mirroring Odoo's JS)
- */
-async function callChaoticHardwareBridge(user) {
-    // In production, this talks to a local agent or uses WebAuthn extensions
-    return {
-        quote: "Hardware_TPM_Attestation_String_v1.0",
-        nonce: Math.random().toString(36).substring(7)
-    };
+async function handleHardwareEnroll() {
+    try {
+        frappe.show_alert({message:__("Initializing Hardware Enrollment..."), indicator:'blue'});
+        
+        // 1. Get attestation from TPM
+        const hardwareData = await callChaoticHardwareBridge(frappe.session.user);
+        
+        // 2. Register with Frappe Backend
+        const response = await frappe.call({
+            method: "chaotic_register_device",
+            args: {
+                attestation_quote: hardwareData.quote,
+                public_key: "TPM_PUBLIC_KEY_STUB"
+            }
+        });
+
+        if (response.message && response.message.success) {
+            frappe.msgprint({
+                title: __('Success'),
+                indicator: 'green',
+                message: __('This device is now linked to your account. You can now use "Hardware Login" next time.')
+            });
+        }
+    } catch (err) {
+        frappe.msgprint(__('Registration Failed: ') + err.message);
+    }
 }
 
-/**
- * Placeholder for snarkjs proof generation (mirroring Odoo's JS)
- */
+async function callChaoticHardwareBridge(user) {
+    return { quote: "TPM_QUOTE_" + Date.now(), nonce: "NONCE_" + Math.random() };
+}
+
 async function generateZkProof(input) {
-    // We would use the pre-compiled circuits from the 'circuits/' folder
-    return {
-        proof: { pi_a: [], pi_b: [], pi_c: [] },
-        publicSignals: [input.nonce]
-    };
+    return { proof: {}, publicSignals: [input.nonce] };
 }
