@@ -1,0 +1,11 @@
+[
+ {
+  "doctype": "Custom Field",
+  "dt": "User",
+  "fieldname": "chaotic_device_id",
+  "fieldtype": "Data",
+  "insert_after": "email",
+  "label": "Chaotic Device ID",
+  "read_only": 1
+ }
+]
