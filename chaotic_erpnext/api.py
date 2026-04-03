@@ -75,3 +75,21 @@ def chaotic_register_device(device_id):
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Chaotic Registration Error")
         return {"success": False, "message": str(e)}
+
+def ensure_custom_fields():
+    """
+    Programmatically ensures the chaotic_device_id field exists on the User DocType.
+    Replaces the unreliable JSON fixtures during site migration.
+    """
+    if not frappe.db.has_column("User", "chaotic_device_id"):
+        from frappe.custom.doctype.custom_field.custom_field import create_custom_field
+        create_custom_field("User", {
+            "fieldname": "chaotic_device_id",
+            "label": "Chaotic Device ID",
+            "fieldtype": "Data",
+            "insert_after": "email",
+            "read_only": 1,
+            "no_copy": 1,
+            "hidden": 0
+        })
+        frappe.db.commit()
