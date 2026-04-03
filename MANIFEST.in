@@ -9,6 +9,7 @@ recursive-include chaotic_erpnext *.csv
 recursive-include chaotic_erpnext *.html
 recursive-include chaotic_erpnext *.ico
 recursive-include chaotic_erpnext *.js
+recursive-include chaotic_erpnext *.bundle.js
 recursive-include chaotic_erpnext *.json
 recursive-include chaotic_erpnext *.md
 recursive-include chaotic_erpnext *.png
