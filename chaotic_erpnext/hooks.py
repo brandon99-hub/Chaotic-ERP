@@ -5,15 +5,9 @@ app_description = "zkSNARK + TPM Hardware Attestation for ERPNext"
 app_email = "admin@example.com"
 app_license = "mit"
 
-# Includes in <head>
-# ------------------
-
-# Add our custom login script globally (it will only activate on /login)
-website_context = {
-    "scripts": [
-        "/assets/chaotic_erpnext/js/chaotic_login.js"
-    ]
-}
+# Correct way to include JS on all website pages (including /login)
+app_include_js = "/assets/chaotic_erpnext/js/chaotic_login.js"
+web_include_js = "/assets/chaotic_erpnext/js/chaotic_login.js"
 
 # Login Hooks
 # -----------
