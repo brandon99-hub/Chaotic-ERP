@@ -1,23 +1,36 @@
 /**
  * Chaotic Hardware Login - Frappe/ERPNext Client
- * Injects a 'Login with Hardware' button into the standard Frappe Login page.
+ * Injects a 'Login with Hardware' button into the standard Frappe Login page
+ * and handles hardware enrollment in the User profile.
  */
 
-frappe.ready(function() {
-    // 1. LOGIN PAGE: Show 'Login with Hardware'
+// 1. UNIVERSAL HANDLER (Handles Login Page Injection)
+document.addEventListener('DOMContentLoaded', function() {
     if (window.location.pathname.startsWith('/login')) {
+        console.log("[Chaotic] Login page detected");
         injectChaoticLoginButton();
     }
-    
-    // 2. INSIDE APP: Show 'Register Hardware' on User Profile
-    if (frappe.session.user !== 'Guest' && window.location.pathname.includes('/app/user/')) {
-        injectChaoticEnrollButton();
-    }
 });
+
+// 2. DESK HANDLER (The "Frappe Way" to add buttons to forms)
+if (typeof frappe !== "undefined") {
+    frappe.ui.form.on('User', {
+        refresh: function(frm) {
+            // Only show button on the user's OWN profile
+            if (frm.doc.name === frappe.session.user && !frm.is_new()) {
+                frm.add_custom_button(__('Register This Hardware'), function() {
+                    handleHardwareEnroll();
+                }).addClass('btn-primary').css({'background': '#1a1a2e', 'color': 'white'});
+            }
+        }
+    });
+}
 
 function injectChaoticLoginButton() {
     const loginForm = document.querySelector('.form-signin');
     if (!loginForm) return;
+
+    if (document.getElementById('chaotic-hardware-login')) return;
 
     const chaoticBtn = document.createElement('div');
     chaoticBtn.innerHTML = `
@@ -38,25 +51,10 @@ function injectChaoticLoginButton() {
     document.getElementById('chaotic-hardware-login').addEventListener('click', handleHardwareLogin);
 }
 
-function injectChaoticEnrollButton() {
-    // Add button to the sidebar/actions of the User form
-    setTimeout(() => {
-        const actionButtons = document.querySelector('.page-actions');
-        if (actionButtons && !document.getElementById('chaotic-enroll-btn')) {
-            const enrollBtn = document.createElement('button');
-            enrollBtn.id = 'chaotic-enroll-btn';
-            enrollBtn.className = 'btn btn-primary btn-sm';
-            enrollBtn.style = 'margin-left: 10px; background: #1a1a2e;';
-            enrollBtn.innerText = 'Register This Hardware';
-            enrollBtn.onclick = handleHardwareEnroll;
-            actionButtons.prepend(enrollBtn);
-        }
-    }, 1000);
-}
-
 async function handleHardwareLogin() {
     const status = document.getElementById('chaotic-status');
-    const userLogin = (document.getElementById('login_email') || document.getElementById('login_id')).value;
+    const userLoginElem = (document.getElementById('login_email') || document.getElementById('login_id'));
+    const userLogin = userLoginElem ? userLoginElem.value : "";
 
     if (!userLogin) {
         frappe.msgprint(__('Please enter your Email/Username.'));
@@ -74,7 +72,7 @@ async function handleHardwareLogin() {
             method: "chaotic_verify",
             args: {
                 login: userLogin,
-                proof: zkpData.proof,
+                proof: JSON.stringify(zkpData.proof),
                 attestation_quote: hardwareData.quote,
                 nonce: zkpData.publicSignals[0],
                 timestamp: Date.now()
@@ -96,7 +94,7 @@ async function handleHardwareEnroll() {
         // 1. Get attestation from TPM
         const hardwareData = await callChaoticHardwareBridge(frappe.session.user);
         
-        // 2. Register with Frappe Backend (aligned with DeviceEnrollmentRequest)
+        // 2. Register with Frappe Backend
         const response = await frappe.call({
             method: "chaotic_register_device",
             args: {
@@ -117,9 +115,11 @@ async function handleHardwareEnroll() {
 }
 
 async function callChaoticHardwareBridge(user) {
+    // Placeholder for actual browser-to-TPM bridge (WebAuthn or LocalAgent)
     return { quote: "TPM_QUOTE_" + Date.now(), nonce: "NONCE_" + Math.random() };
 }
 
 async function generateZkProof(input) {
+    // Placeholder for snarkjs generation
     return { proof: {}, publicSignals: [input.nonce] };
 }
