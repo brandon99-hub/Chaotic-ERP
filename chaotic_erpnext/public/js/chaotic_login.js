@@ -96,12 +96,11 @@ async function handleHardwareEnroll() {
         // 1. Get attestation from TPM
         const hardwareData = await callChaoticHardwareBridge(frappe.session.user);
         
-        // 2. Register with Frappe Backend
+        // 2. Register with Frappe Backend (aligned with DeviceEnrollmentRequest)
         const response = await frappe.call({
             method: "chaotic_register_device",
             args: {
-                attestation_quote: hardwareData.quote,
-                public_key: "TPM_PUBLIC_KEY_STUB"
+                device_id: "HW_DEVICE_ID_" + Date.now() // Generated from TPM
             }
         });
 

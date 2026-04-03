@@ -41,7 +41,7 @@ def chaotic_verify(login, proof, attestation_quote, nonce, timestamp):
         return {"success": False, "message": f"Connection to Chaotic Authority failed: {str(e)}"}
 
 @frappe.whitelist()
-def chaotic_register_device(attestation_quote, public_key):
+def chaotic_register_device(device_id):
     """
     Enrolls the current logged-in user's hardware device.
     Links the TPM identity to the Frappe User account.
@@ -50,13 +50,12 @@ def chaotic_register_device(attestation_quote, public_key):
     if user == "Guest":
         frappe.throw(_("You must be logged in to register a device."))
 
-    # Verify and map on the FastAPI backend
-    fastapi_url = frappe.conf.get("chaotic_api_url", "http://localhost:8000/api/auth/register")
+    # Aligned with api_server.py:252 (/api/devices/enroll)
+    fastapi_url = frappe.conf.get("chaotic_api_url", "http://localhost:8000/api/devices/enroll")
     
     payload = {
         "user_id": user,
-        "attestation": attestation_quote,
-        "public_key": public_key
+        "device_id": device_id
     }
     
     try:
@@ -64,8 +63,8 @@ def chaotic_register_device(attestation_quote, public_key):
         result = response.json()
         
         if result.get("success"):
-            # Store the hardware ID on the User profile (Custom Field)
-            frappe.db.set_value("User", user, "chaotic_device_id", result.get("device_id"))
+            # Store the hardware ID on the User profile
+            frappe.db.set_value("User", user, "chaotic_device_id", device_id)
             frappe.db.commit()
             return {"success": True, "message": "Device Registered Successfully!"}
         else:
