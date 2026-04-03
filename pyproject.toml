@@ -1,12 +1,11 @@
 [project]
 name = "chaotic_erpnext"
+version = "0.0.1"
+description = "zkSNARK + TPM Hardware Attestation for ERPNext"
 authors = [
     { name = "Chaotic Team", email = "admin@example.com" }
 ]
-description = "zkSNARK + TPM Hardware Attestation for ERPNext"
 requires-python = ">=3.10"
-readme = "README.md"
-dynamic = ["version"]
 dependencies = [
     "requests"
 ]
@@ -22,4 +21,4 @@ description = "zkSNARK + TPM Hardware Attestation for ERPNext"
 icon = "octicon octicon-shield"
 color = "grey"
 email = "admin@example.com"
-repo_url = "https://github.com/your-username/chaotic_erpnext"
+repo_url = "https://github.com/brandon99-hub/Chaotic-ERP"
