@@ -5,9 +5,9 @@ app_description = "zkSNARK + TPM Hardware Attestation for ERPNext"
 app_email = "admin@example.com"
 app_license = "mit"
 
-# Correct way to include JS on all website pages (including /login)
-app_include_js = "/assets/chaotic_erpnext/js/chaotic_login.js"
-web_include_js = "/assets/chaotic_erpnext/js/chaotic_login.js"
+# Reference the BUNDLED output file (note: .bundle.js)
+app_include_js = "/assets/chaotic_erpnext/js/chaotic_login.bundle.js"
+web_include_js = "/assets/chaotic_erpnext/js/chaotic_login.bundle.js"
 
 # Login Hooks
 # -----------
