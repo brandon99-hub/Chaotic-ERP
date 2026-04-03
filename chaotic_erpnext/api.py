@@ -12,7 +12,8 @@ def chaotic_verify(login, proof, attestation_quote, nonce, timestamp):
     """
     
     # 1. Prepare payload for the Chaotic FastAPI
-    fastapi_url = frappe.conf.get("chaotic_api_url", "http://localhost:8000/api/auth/verify")
+    base_url = frappe.conf.get("chaotic_api_url", "http://localhost:8000")
+    fastapi_url = f"{base_url.rstrip('/')}/api/auth/verify"
     
     payload = {
         "user_id": login,
@@ -51,7 +52,8 @@ def chaotic_register_device(device_id):
         frappe.throw(_("You must be logged in to register a device."))
 
     # Aligned with api_server.py:252 (/api/devices/enroll)
-    fastapi_url = frappe.conf.get("chaotic_api_url", "http://localhost:8000/api/devices/enroll")
+    base_url = frappe.conf.get("chaotic_api_url", "http://localhost:8000")
+    fastapi_url = f"{base_url.rstrip('/')}/api/devices/enroll"
     
     payload = {
         "user_id": user,
