@@ -6,6 +6,8 @@
   "fieldtype": "Data",
   "insert_after": "email",
   "label": "Chaotic Device ID",
-  "read_only": 1
+  "name": "User-chaotic_device_id",
+  "read_only": 1,
+  "module": "Chaotic"
  }
 ]
