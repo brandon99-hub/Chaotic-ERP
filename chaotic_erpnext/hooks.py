@@ -5,9 +5,7 @@ app_description = "zkSNARK + TPM Hardware Attestation for ERPNext"
 app_email = "admin@example.com"
 app_license = "mit"
 
-# Reference the BUNDLED output file (note: .bundle.js)
 app_include_js = "/assets/chaotic_erpnext/js/chaotic_login.bundle.js"
-web_include_js = "/assets/chaotic_erpnext/js/chaotic_login.bundle.js"
 
 # Login Hooks
 # -----------
