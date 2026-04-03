@@ -1,0 +1,25 @@
+[project]
+name = "chaotic_erpnext"
+authors = [
+    { name = "Chaotic Team", email = "admin@example.com" }
+]
+description = "zkSNARK + TPM Hardware Attestation for ERPNext"
+requires-python = ">=3.10"
+readme = "README.md"
+dynamic = ["version"]
+dependencies = [
+    "requests"
+]
+
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.bench.app]
+title = "Chaotic Hardware Authentication"
+publisher = "Chaotic Team"
+description = "zkSNARK + TPM Hardware Attestation for ERPNext"
+icon = "octicon octicon-shield"
+color = "grey"
+email = "admin@example.com"
+repo_url = "https://github.com/your-username/chaotic_erpnext"
