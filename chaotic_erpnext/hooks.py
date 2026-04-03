@@ -11,7 +11,7 @@ app_license = "mit"
 # Add our custom login script globally (it will only activate on /login)
 website_context = {
     "scripts": [
-        "/assets/chaotic_erpnext/js/chaotic_login.bundle.js"
+        "/assets/chaotic_erpnext/js/chaotic_login.js"
     ]
 }
 
