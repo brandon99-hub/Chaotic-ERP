@@ -7,6 +7,9 @@ app_license = "mit"
 
 app_include_js = "/assets/chaotic_erpnext/js/chaotic_login.bundle.js"
 
+# Fixtures for database fields
+fixtures = ["Custom Field"]
+
 # Login Hooks
 # -----------
 
