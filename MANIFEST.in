@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include chaotic_erpnext *.css
+recursive-include chaotic_erpnext *.csv
+recursive-include chaotic_erpnext *.html
+recursive-include chaotic_erpnext *.ico
+recursive-include chaotic_erpnext *.js
+recursive-include chaotic_erpnext *.json
+recursive-include chaotic_erpnext *.md
+recursive-include chaotic_erpnext *.png
+recursive-include chaotic_erpnext *.py
+recursive-include chaotic_erpnext *.svg
+recursive-include chaotic_erpnext *.txt
+recursive-exclude chaotic_erpnext *.pyc
