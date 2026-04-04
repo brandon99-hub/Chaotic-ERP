@@ -7,7 +7,7 @@ from frappe import _
 @frappe.whitelist(allow_guest=True)
 def chaotic_proxy(endpoint, method="GET", data=None):
     """Generic internal proxy with ngrok bypass and better diagnostics."""
-    base_url = frappe.conf.get("chaotic_api_url", "http://localhost:8000")
+    base_url = frappe.conf.get("chaotic_api_url", "http://localhost:8088")
     url = f"{base_url.rstrip('/')}{endpoint}"
     
     headers = {
