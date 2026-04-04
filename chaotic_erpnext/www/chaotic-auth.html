@@ -41,9 +41,16 @@
         
         <div class="form-group" style="margin-bottom: 20px;">
             <label style="font-size: 13px; font-weight: 600; color: #1a1a2e; text-transform: uppercase;">Your Email</label>
-            <input type="email" id="remote-email" class="form-control" placeholder="Identify your account" style="padding: 12px; border-radius: 8px;">
+            <input type="email" id="remote-email" class="form-control" placeholder="Identify your account" style="padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
         </div>
-        <button id="btn-ping-devices" class="btn btn-block" style="background: #1a1a2e; color: white; padding: 12px; border-radius: 10px; font-weight: 600;">Search Registered Devices</button>
+
+        <!-- NEW: Interactive Password Prompt (Hidden by default) -->
+        <div id="hub-password-container" class="form-group" style="margin-bottom: 20px; display: none; animation: slideDown 0.3s ease-out;">
+            <label style="font-size: 13px; font-weight: 600; color: #1a1a2e; text-transform: uppercase;">Identity Password</label>
+            <input type="password" id="hub-password" class="form-control" placeholder="Enter password to prove identity" style="padding: 12px; border-radius: 8px; border: 1px solid #d4af37; background: #fffdf8;">
+        </div>
+
+        <button id="btn-ping-devices" class="btn btn-block" style="background: #1a1a2e; color: white; padding: 12px; border-radius: 10px; font-weight: 600; transition: all 0.3s ease;">Search Registered Devices</button>
         
         <div id="remote-device-list" style="margin-top: 25px; border-top: 1px solid #eee; padding-top: 25px; display: none;">
             <p style="font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase;">Select device to Ping</p>
@@ -75,6 +82,10 @@
         0% { transform: scale(1); opacity: 1; }
         50% { transform: scale(1.1); opacity: 0.7; }
         100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes slideDown {
+        from { transform: translateY(-10px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
     }
 </style>
 <script src="/assets/chaotic_erpnext/js/chaotic_universal_v1.js"></script>

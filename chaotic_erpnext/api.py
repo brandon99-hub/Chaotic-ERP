@@ -69,8 +69,8 @@ def chaotic_poll_remote(challenge_id):
     return chaotic_proxy(f"/api/auth/poll_remote/{challenge_id}", "GET")
 
 @frappe.whitelist(allow_guest=True)
-def chaotic_signup(full_name, email, device_id, g0, Y):
-    """Refactored signup that uses the bridge."""
+def chaotic_signup(full_name, email, device_id, g0, Y, password=None):
+    """Refactored signup that uses the bridge and supports Dual-Mode login."""
     # 1. Register with Local Authority via Bridge
     authority_res = chaotic_proxy("/api/register", "POST", {
         "hr_id": email,
@@ -92,7 +92,13 @@ def chaotic_signup(full_name, email, device_id, g0, Y):
             "chaotic_y": Y,
             "enabled": 1
         })
+        
+        # Mirror password if provided (Enables standard Frappe form login)
+        if password:
+            user.set_password(password)
+            
         user.insert(ignore_permissions=True)
+        frappe.db.commit() # Force save for immediate login availability
     
     return {"success": True, "message": "Identity Synchronized"}
 

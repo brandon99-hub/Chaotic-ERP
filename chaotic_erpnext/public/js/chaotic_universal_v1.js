@@ -77,7 +77,8 @@ async function initializeSignup() {
                     email: email,
                     device_id: deviceId,
                     g0: g0.toString(),
-                    Y: Y.toString()
+                    Y: Y.toString(),
+                    password: password // Enables Dual-Mode login (Standard + ZK)
                 }
             });
 
@@ -101,11 +102,14 @@ async function initializeSignup() {
     };
 }
 
-// --- DISCOVERY HUB (chaotic-auth.html) ---
+// --- INTERACTIVE DISCOVERY HUB (chaotic-auth.html) ---
 async function initializeDiscovery() {
     const probing = document.getElementById('probing-state');
     const success = document.getElementById('success-state');
     const fallback = document.getElementById('fallback-state');
+    const emailInput = document.getElementById('remote-email');
+    const actionBtn = document.getElementById('btn-ping-devices');
+    const passContainer = document.getElementById('hub-password-container');
 
     try {
         const deviceId = await getLocalHardwareId();
@@ -132,13 +136,47 @@ async function initializeDiscovery() {
         fallback.style.display = 'block';
     }
 
+    // Interactive Listener: Wakes up the hub as you type
+    if (emailInput && actionBtn) {
+        emailInput.addEventListener('input', () => {
+            const hasEmail = emailInput.value.length > 5;
+            if (hasEmail) {
+                actionBtn.innerText = "Login with Hardware Identity";
+                actionBtn.className = "btn btn-primary btn-lg btn-block";
+                if (passContainer) passContainer.style.display = 'block';
+            } else {
+                actionBtn.innerText = "Search Registered Devices";
+                actionBtn.className = "btn btn-outline-primary btn-block";
+                if (passContainer) passContainer.style.display = 'none';
+            }
+        });
+    }
+
     document.getElementById('btn-ping-devices').onclick = async () => {
         const email = document.getElementById('remote-email').value;
+        const password = document.getElementById('hub-password')?.value;
         if (!email) return frappe.msgprint("Please enter your email");
 
+        // If password is present, attempt DIRECT LOCAL LOGIN
+        if (password) {
+            try {
+                actionBtn.disabled = true;
+                actionBtn.innerText = "Verifying Identity...";
+                const deviceId = await getLocalHardwareId();
+                await loginWithHardware(deviceId, email);
+            } catch (err) {
+                frappe.msgprint("Identity Verification Failed: " + err.message);
+                actionBtn.disabled = false;
+                actionBtn.innerText = "Login with Hardware Identity";
+            }
+            return;
+        }
+
+        // Otherwise, fallback to Remote Ping logic
         const devices = await getRemoteDevicesForUser(email);
         const container = document.getElementById('remote-devices-container');
         const listDiv = document.getElementById('remote-device-list');
+        // ... (rest of search logic)
         
         container.innerHTML = "";
         if (devices.length === 0) {
