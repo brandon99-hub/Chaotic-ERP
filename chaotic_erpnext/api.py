@@ -75,7 +75,8 @@ def chaotic_signup(full_name, email, device_id, g0, Y, password=None):
     authority_res = chaotic_proxy("/api/register", "POST", {
         "hr_id": email,
         "g0": g0,
-        "Y": Y
+        "Y": Y,
+        "device_id": device_id # CRITICAL: Passes machine ID back to local authority for enrollment
     })
     
     if not authority_res.get("success"):
