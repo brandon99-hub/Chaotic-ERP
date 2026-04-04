@@ -78,10 +78,10 @@ def chaotic_register_device(device_id):
         return {"success": False, "message": str(e)}
 
 @frappe.whitelist(allow_guest=True)
-def chaotic_signup(full_name, email, device_id):
+def chaotic_signup(full_name, email, device_id, g0, Y):
     """
     Creates a new Frappe User and simultaneously enrolls their hardware
-    with the local Chaotic Authority.
+    with the local Chaotic Authority via S2S handshake.
     """
     # 1. Create the Frappe User if they don't exist
     if not frappe.db.exists("User", email):
@@ -96,24 +96,35 @@ def chaotic_signup(full_name, email, device_id):
         })
         user.insert(ignore_permissions=True)
     
-    # 2. Bind the Hardware ID to the User Doc
-    frappe.db.set_value("User", email, "chaotic_device_id", device_id)
+    # 2. Bind the Hardware ID and ZK Commitments to the User Doc
+    frappe.db.set_value("User", email, {
+        "chaotic_device_id": device_id,
+        "chaotic_g0": g0,
+        "chaotic_y": Y
+    })
     frappe.db.commit()
 
-    # 3. Enroll the device in the FastAPI Authority
+    # 3. Synchronize with FastAPI Authority (Server-to-Server)
     base_url = frappe.conf.get("chaotic_api_url", "http://localhost:8000")
-    fastapi_url = f"{base_url.rstrip('/')}/api/devices/enroll"
     
     try:
-        response = requests.post(fastapi_url, json={
+        # A. Register the ZK Commitment
+        reg_response = requests.post(f"{base_url.rstrip('/')}/api/register", json={
+            "hr_id": email,
+            "g0": g0,
+            "Y": Y
+        }, timeout=10)
+        
+        # B. Enroll the Hardware
+        enroll_response = requests.post(f"{base_url.rstrip('/')}/api/devices/enroll", json={
             "user_id": email,
             "device_id": device_id
         }, timeout=10)
         
-        if response.status_code == 200:
-            return {"success": True, "message": f"Account Created for {email}"}
+        if reg_response.status_code == 200 and enroll_response.status_code == 200:
+            return {"success": True, "message": f"Synchronized account created for {email}"}
         else:
-            return {"success": False, "message": "Hardware Enrollment Failed"}
+            return {"success": False, "message": "Backend synchronization failed."}
             
     except Exception as e:
         return {"success": False, "message": f"Connection to Chaotic Hub failed: {str(e)}"}
@@ -144,5 +155,29 @@ def ensure_custom_fields():
             "read_only": 1,
             "no_copy": 1,
             "hidden": 0
+        })
+        frappe.db.commit()
+
+    if not frappe.db.has_column("User", "chaotic_g0"):
+        from frappe.custom.doctype.custom_field.custom_field import create_custom_field
+        create_custom_field("User", {
+            "fieldname": "chaotic_g0",
+            "label": "Chaotic G0 (Commitment Token)",
+            "fieldtype": "Data",
+            "insert_after": "chaotic_device_id",
+            "read_only": 1,
+            "hidden": 1
+        })
+        frappe.db.commit()
+
+    if not frappe.db.has_column("User", "chaotic_y"):
+        from frappe.custom.doctype.custom_field.custom_field import create_custom_field
+        create_custom_field("User", {
+            "fieldname": "chaotic_y",
+            "label": "Chaotic Y (Public Commitment)",
+            "fieldtype": "Data",
+            "insert_after": "chaotic_g0",
+            "read_only": 1,
+            "hidden": 1
         })
         frappe.db.commit()
