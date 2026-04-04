@@ -133,13 +133,14 @@ def chaotic_verify(login, proof, attestation_quote, nonce, timestamp, public_sig
         "public_signals": public_signals or []
     })
 
-    if authority_res.get("success"):
-        frappe.local.login_manager = LoginManager()
-        frappe.local.login_manager.run_post_login_hooks = True
-        frappe.local.login_manager.login_as(login)
+    if authority_res.get("status") == "success":
+        # Safe login procedure for Frappe Cloud
+        login_manager = LoginManager()
+        login_manager.run_post_login_hooks = True
+        login_manager.login_as(login)
         return {"success": True, "message": "Authenticated"}
     
-    return {"success": False, "message": "Verification Failed"}
+    return {"success": False, "message": authority_res.get("error", "Verification Failed")}
 
 @frappe.whitelist(allow_guest=True)
 def chaotic_discover(device_id):
