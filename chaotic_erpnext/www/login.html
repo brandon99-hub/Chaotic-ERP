@@ -40,6 +40,36 @@
     </div>
 </div>
 
+<script>
+frappe.ready(function() {
+    $(".form-signin").on("submit", function(e) {
+        e.preventDefault();
+        var email = $("#login_email").val();
+        var password = $("#login_password").val();
+
+        if(!email || !password) {
+            frappe.msgprint(__("Email and Password are required"));
+            return;
+        }
+
+        frappe.call({
+            method: "login",
+            args: {
+                usr: email,
+                pwd: password
+            },
+            callback: function(r) {
+                if(r.message == "Logged In") {
+                    window.location.href = "/app";
+                }
+            },
+            freeze: true,
+            freeze_message: __("Authenticating...")
+        });
+    });
+});
+</script>
+
 <style>
     body { background-color: #ffffff !important; }
     #chaotic-login-btn:hover { background: #d4af37 !important; border-color: #d4af37 !important; color: #1a1a2e !important; }
