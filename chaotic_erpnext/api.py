@@ -5,6 +5,50 @@ from frappe.auth import LoginManager
 from frappe import _
 
 @frappe.whitelist(allow_guest=True)
+def chaotic_proxy(endpoint, method="GET", data=None):
+    """Generic internal proxy for S2S communication with local authority."""
+    base_url = frappe.conf.get("chaotic_api_url", "http://localhost:8000")
+    url = f"{base_url.rstrip('/')}{endpoint}"
+    
+    try:
+        if method == "POST":
+            response = requests.post(url, json=data, timeout=15)
+        else:
+            response = requests.get(url, params=data, timeout=15)
+        
+        return response.json()
+    except Exception as e:
+        frappe.throw(_("Chaotic Bridge Error: {0}").format(str(e)))
+
+@frappe.whitelist(allow_guest=True)
+def chaotic_get_challenge(user_id, device_id):
+    return chaotic_proxy("/api/auth/challenge", "POST", {"user_id": user_id, "device_id": device_id})
+
+@frappe.whitelist(allow_guest=True)
+def chaotic_get_user_devices(user_id):
+    return chaotic_proxy(f"/api/devices/user/{user_id}", "GET")
+
+@frappe.whitelist(allow_guest=True)
+def chaotic_get_device_info(device_id):
+    return chaotic_proxy(f"/api/devices/{device_id}", "GET")
+
+@frappe.whitelist(allow_guest=True)
+def chaotic_rename_device(device_id, new_alias):
+    return chaotic_proxy("/api/devices/rename", "POST", {"device_id": device_id, "new_alias": new_alias})
+
+@frappe.whitelist(allow_guest=True)
+def chaotic_initiate_remote(user_id, device_id, site_origin):
+    return chaotic_proxy("/api/auth/initiate_remote", "POST", {
+        "user_id": user_id, 
+        "device_id": device_id, 
+        "site_origin": site_origin
+    })
+
+@frappe.whitelist(allow_guest=True)
+def chaotic_poll_remote(challenge_id):
+    return chaotic_proxy(f"/api/auth/poll_remote/{challenge_id}", "GET")
+
+@frappe.whitelist(allow_guest=True)
 def get_chaotic_g0():
     """Proxy for g0 generation to bypass browser's Private Network CORS policy."""
     base_url = frappe.conf.get("chaotic_api_url", "http://localhost:8000")

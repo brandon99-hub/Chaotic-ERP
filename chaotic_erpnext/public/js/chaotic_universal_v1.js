@@ -1,11 +1,10 @@
 /**
  * Chaotic Universal Identity Client (v1)
  * Handles hardware discovery, remote relay (Ping), and unified auth/signup flows.
- * Now supports Backend-Synchronized ZK Commitment generation.
+ * Now uses the "Universal Bridge" (Frappe Backend Proxies) to bypass CORS blocks.
  */
 
 // --- CONFIGURATION ---
-const CHAOTIC_API_URL = "http://localhost:8000"; 
 const SNARK_FIELD_MODULUS = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 
 // --- STATE MANAGEMENT ---
@@ -14,7 +13,7 @@ let currentChallengeId = null;
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log("[Chaotic] Universal Hub Initialized");
+    console.log("[Chaotic] Universal Hub Initialized (Bridge Mode)");
     const path = window.location.pathname;
     
     if (path === '/chaotic-auth') {
@@ -46,7 +45,8 @@ function computeCommitment(g0, secretX) {
 // --- SIGNUP FLOW (chaotic-signup.html) ---
 async function initializeSignup() {
     const btn = document.getElementById('btn-signup-hardware');
-    
+    if (!btn) return;
+
     btn.onclick = async () => {
         const name = document.getElementById('signup-name').value;
         const email = document.getElementById('signup-email').value;
@@ -59,20 +59,17 @@ async function initializeSignup() {
         document.getElementById('btn-loading').style.display = 'inline-block';
 
         try {
-            // 1. Get Hardware ID
             const deviceId = await getLocalHardwareId();
             
-            // 2. Fetch g0 via Frappe Backend Proxy (Bypasses Private Network CORS)
+            // Bridge Proxy Lookup
             const g0Res = await frappe.call({
                 method: "chaotic_erpnext.api.get_chaotic_g0"
             });
             const g0 = g0Res.message.g0;
 
-            // 3. Generate ZK Commitment (Y)
             const secretX = await hashPasswordToField(password);
             const Y = computeCommitment(g0, secretX);
 
-            // 4. Handshake Call to Frappe Backend (Atomic Sync)
             const response = await frappe.call({
                 method: "chaotic_erpnext.api.chaotic_signup",
                 args: {
@@ -112,8 +109,6 @@ async function initializeDiscovery() {
 
     try {
         const deviceId = await getLocalHardwareId();
-        
-        // Handshake check with Frappe Backend
         const response = await frappe.call({
             method: "chaotic_erpnext.api.chaotic_discover",
             args: { device_id: deviceId }
@@ -133,12 +128,10 @@ async function initializeDiscovery() {
             fallback.style.display = 'block';
         }
     } catch (err) {
-        console.warn("[Chaotic] Discovery probe failed:", err);
         probing.style.display = 'none';
         fallback.style.display = 'block';
     }
 
-    // Handle Remote Ping Initiation
     document.getElementById('btn-ping-devices').onclick = async () => {
         const email = document.getElementById('remote-email').value;
         if (!email) return frappe.msgprint("Please enter your email");
@@ -149,7 +142,7 @@ async function initializeDiscovery() {
         
         container.innerHTML = "";
         if (devices.length === 0) {
-            container.innerHTML = "<p style='color:red;'>No registered devices found for this email.</p>";
+            container.innerHTML = "<p style='color:red;'>No registered devices found.</p>";
         } else {
             devices.forEach(dev => {
                 const btn = document.createElement('button');
@@ -168,18 +161,15 @@ async function initializeDiscovery() {
 // --- LOGIN FLOW ---
 async function loginWithHardware(deviceId, email) {
     try {
-        frappe.show_alert({message:__("Engaging Hardware Proof..."), indicator:'blue'});
+        frappe.show_alert({message:__("Engaging Hardware Bridge..."), indicator:'blue'});
         
-        // 1. Get g0 and Y from Frappe for this email (to ensure proof matches commitment)
-        // Note: For ZK security, g0 is public, Y is public commitment.
-        
-        const challenge = await fetch(`${CHAOTIC_API_URL}/api/auth/challenge`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_id: email, device_id: deviceId })
-        }).then(r => r.json());
+        // Challenge via Bridge
+        const challengeRes = await frappe.call({
+            method: "chaotic_erpnext.api.chaotic_get_challenge",
+            args: { user_id: email, device_id: deviceId }
+        });
+        const challenge = challengeRes.message;
 
-        // Note: Full snarkjs proof generation would go here in production.
         const signature = await getHardwareSignature(deviceId, challenge.nonce);
 
         const response = await frappe.call({
@@ -217,7 +207,7 @@ async function initializeSettings() {
                 loadMachinePassport(deviceId);
             }
         } catch (err) {
-            frappe.msgprint("Access Denied: Please use your registered machine.");
+            frappe.msgprint("Access Denied.");
         }
     };
 
@@ -225,13 +215,13 @@ async function initializeSettings() {
         const newAlias = document.getElementById('machine-alias-input').value;
         const deviceId = await getLocalHardwareId();
         
-        const response = await fetch(`${CHAOTIC_API_URL}/api/devices/rename`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ device_id: deviceId, new_alias: newAlias })
+        // Rename via Bridge
+        const response = await frappe.call({
+            method: "chaotic_erpnext.api.chaotic_rename_device",
+            args: { device_id: deviceId, new_alias: newAlias }
         });
         
-        if (response.ok) {
+        if (response.message && response.message.success) {
             document.getElementById('alias-status').style.display = 'block';
             setTimeout(() => { document.getElementById('alias-status').style.display = 'none'; }, 2000);
         }
@@ -239,7 +229,12 @@ async function initializeSettings() {
 }
 
 async function loadMachinePassport(deviceId) {
-    const deviceData = await fetch(`${CHAOTIC_API_URL}/api/devices/${deviceId}`).then(r => r.json());
+    // Device Info via Bridge
+    const infoRes = await frappe.call({
+        method: "chaotic_erpnext.api.chaotic_get_device_info",
+        args: { device_id: deviceId }
+    });
+    const deviceData = infoRes.message;
     
     document.getElementById('machine-alias-input').value = deviceData.machine_alias;
     document.getElementById('device-id-display').innerText = deviceId.substring(0,12) + "...";
@@ -276,10 +271,13 @@ async function getLocalHardwareId() {
 }
 
 async function getRemoteDevicesForUser(email) {
-    const res = await fetch(`${CHAOTIC_API_URL}/api/devices/user/${email}`);
-    if (res.ok) {
-        const data = await res.json();
-        return data.devices || [];
+    // User Devices via Bridge
+    const res = await frappe.call({
+        method: "chaotic_erpnext.api.chaotic_get_user_devices",
+        args: { user_id: email }
+    });
+    if (res.message) {
+        return res.message.devices || [];
     }
     return [];
 }
@@ -293,28 +291,32 @@ async function initiateRemotePing(email, deviceId, alias) {
     pending.style.display = 'block';
     pingedName.innerText = alias || "Registered Device";
 
-    const initiateRes = await fetch(`${CHAOTIC_API_URL}/api/auth/initiate_remote`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+    // Initiate via Bridge
+    const initiateRes = await frappe.call({
+        method: "chaotic_erpnext.api.chaotic_initiate_remote",
+        args: {
             user_id: email,
             device_id: deviceId,
             site_origin: window.location.origin
-        })
-    }).then(r => r.json());
+        }
+    });
 
-    if (initiateRes.success) {
-        pollForRemoteSignature(initiateRes.challenge_id, email);
+    if (initiateRes.message && initiateRes.message.success) {
+        pollForRemoteSignature(initiateRes.message.challenge_id, email);
     }
 }
 
 async function pollForRemoteSignature(challengeId, email) {
     const interval = setInterval(async () => {
-        const pollRes = await fetch(`${CHAOTIC_API_URL}/api/auth/poll_remote/${challengeId}`).then(r => r.json());
+        // Poll via Bridge
+        const pollRes = await frappe.call({
+            method: "chaotic_erpnext.api.chaotic_poll_remote",
+            args: { challenge_id: challengeId }
+        });
         
-        if (pollRes.status === "verified") {
+        if (pollRes.message && pollRes.message.status === "verified") {
             clearInterval(interval);
-            finalizeLogin(pollRes);
+            finalizeLogin(pollRes.message);
         }
     }, 3000); 
 }
