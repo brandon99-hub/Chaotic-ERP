@@ -53,6 +53,16 @@ def chaotic_get_device_info(device_id):
     return chaotic_proxy(f"/api/devices/{device_id}", "GET")
 
 @frappe.whitelist(allow_guest=True)
+def chaotic_get_attestation(user_id, device_id, nonce, srs_id="default_srs_v1"):
+    return chaotic_proxy("/api/devices/attest", "POST", {
+        "user_id": user_id, 
+        "device_id": device_id, 
+        "nonce": str(nonce),
+        "timestamp": frappe.utils.now_datetime().timestamp(),
+        "srs_id": srs_id
+    })
+
+@frappe.whitelist(allow_guest=True)
 def chaotic_rename_device(device_id, new_alias):
     return chaotic_proxy("/api/devices/rename", "POST", {"device_id": device_id, "new_alias": new_alias})
 

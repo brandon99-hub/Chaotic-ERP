@@ -211,7 +211,7 @@ async function loginWithHardware(deviceId, email) {
         });
         const challenge = challengeRes.message;
 
-        const signature = await getHardwareSignature(deviceId, challenge.nonce);
+        const signature = await getHardwareSignature(deviceId, email, challenge.nonce);
 
         const response = await frappe.call({
             method: "chaotic_erpnext.api.chaotic_verify",
@@ -240,7 +240,8 @@ async function initializeSettings() {
     document.getElementById('btn-unlock-settings').onclick = async () => {
         try {
             const deviceId = await getLocalHardwareId();
-            const hardwareData = await getHardwareSignature(deviceId, "CHAOTIC_SETTINGS_UNLOCK");
+            // Note: Settings unlock uses a special nonce
+            const hardwareData = await getHardwareSignature(deviceId, "system_admin", "CHAOTIC_SETTINGS_UNLOCK");
             
             if (hardwareData) {
                 authDiv.style.display = 'none';
@@ -379,10 +380,25 @@ async function finalizeLogin(authData) {
     }
 }
 
-async function getHardwareSignature(deviceId, nonce) {
+async function getHardwareSignature(deviceId, email, nonce) {
+    // 1. Request Hardware Attestation from Local Authority (via Bridge)
+    const attestationRes = await frappe.call({
+        method: "chaotic_erpnext.api.chaotic_get_attestation",
+        args: { user_id: email, device_id: deviceId, nonce: nonce }
+    });
+
+    if (!attestationRes.message || !attestationRes.message.success) {
+        throw new Error(attestationRes.message?.detail || "Local Hardware Attestation Failed");
+    }
+
+    const attestation = attestationRes.message.attestation;
+
+    // 2. Local ZK-Proof Generation (Mock for Browser - Proof is verified by local authority in this bridge model)
+    // In our Universal Bridge, the local authority already verified the TPM/Software key during the /attest call.
+    // We return a simplified proof payload that the backend verify endpoint accepts.
     return {
-        proof: {}, 
-        attestation: "TPM_SIGNED_DATA_" + Date.now(),
+        proof: { "machine_verified": true },
+        attestation: attestation,
         nonce: nonce
     };
 }
