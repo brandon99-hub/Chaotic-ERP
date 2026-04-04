@@ -62,9 +62,11 @@ async function initializeSignup() {
             // 1. Get Hardware ID
             const deviceId = await getLocalHardwareId();
             
-            // 2. Fetch g0 from FastAPI (The ZK Seed)
-            const g0Res = await fetch(`${CHAOTIC_API_URL}/api/register/g0`).then(r => r.json());
-            const g0 = g0Res.g0;
+            // 2. Fetch g0 via Frappe Backend Proxy (Bypasses Private Network CORS)
+            const g0Res = await frappe.call({
+                method: "chaotic_erpnext.api.get_chaotic_g0"
+            });
+            const g0 = g0Res.message.g0;
 
             // 3. Generate ZK Commitment (Y)
             const secretX = await hashPasswordToField(password);

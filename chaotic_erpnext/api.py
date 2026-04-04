@@ -5,6 +5,16 @@ from frappe.auth import LoginManager
 from frappe import _
 
 @frappe.whitelist(allow_guest=True)
+def get_chaotic_g0():
+    """Proxy for g0 generation to bypass browser's Private Network CORS policy."""
+    base_url = frappe.conf.get("chaotic_api_url", "http://localhost:8000")
+    try:
+        response = requests.get(f"{base_url.rstrip('/')}/api/register/g0", timeout=5)
+        return response.json()
+    except Exception as e:
+        frappe.throw(_("Could not connect to Chaotic Authority: {0}").format(str(e)))
+
+@frappe.whitelist(allow_guest=True)
 def chaotic_verify(login, proof, attestation_quote, nonce, timestamp):
     """
     The verification proxy for Frappe. 
