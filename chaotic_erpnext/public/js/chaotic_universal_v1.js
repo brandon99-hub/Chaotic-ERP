@@ -215,7 +215,7 @@ async function loginWithHardware(deviceId, email) {
              throw new Error(challenge?.detail || challenge?.message || "Challenge Failed");
         }
 
-        const signature = await getHardwareSignature(deviceId, email, challenge.nonce);
+        const signature = await getHardwareSignature(deviceId, email, challenge.challenge.N);
 
         const response = await frappe.call({
             method: "chaotic_erpnext.api.chaotic_verify",
@@ -223,7 +223,7 @@ async function loginWithHardware(deviceId, email) {
                 login: email,
                 proof: JSON.stringify(signature.proof),
                 attestation_quote: signature.attestation,
-                nonce: challenge.nonce,
+                nonce: challenge.challenge.N,
                 timestamp: Math.floor(Date.now() / 1000)
             }
         });
@@ -381,7 +381,7 @@ async function finalizeLogin(authData) {
             login: authData.user_id,
             proof: JSON.stringify(authData.proof),
             attestation_quote: authData.attestation,
-            nonce: authData.nonce,
+            nonce: authData.challenge.N,
             timestamp: Math.floor(Date.now() / 1000)
         }
     });

@@ -119,7 +119,7 @@ def chaotic_verify(login, proof, attestation_quote, nonce, timestamp):
         "device_id": "AUTO",
         "proof": json.loads(proof) if isinstance(proof, str) else proof,
         "attestation": attestation_quote,
-        "nonce": nonce,
+        "nonce": str(nonce),
         "timestamp": timestamp
     })
 
