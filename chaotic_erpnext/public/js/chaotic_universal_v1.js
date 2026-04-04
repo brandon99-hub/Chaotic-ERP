@@ -13,7 +13,7 @@ let currentChallengeId = null;
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log("[Chaotic] Universal Hub Initialized (Bridge-Sync v1.2.3)");
+    console.log("[Chaotic] Universal Hub Initialized (Bridge-Sync v1.2.4)");
     const path = window.location.pathname;
     
     if (path === '/chaotic-auth') {
@@ -231,7 +231,14 @@ async function loginWithHardware(deviceId, email) {
         });
 
         if (response.message && response.message.success) {
-            window.location.href = "/app";
+            frappe.show_alert({
+                message: __("Login Successful! Redirecting to Desk..."),
+                indicator: 'green'
+            }, 5);
+            
+            setTimeout(() => {
+                window.location.replace("/app");
+            }, 800);
         }
     } catch (err) {
         console.error("[Chaotic Handshake Failure]", err);
@@ -391,7 +398,14 @@ async function finalizeLogin(authData) {
     });
 
     if (response.message && response.message.success) {
-        window.location.href = "/app";
+        frappe.show_alert({
+            message: __("Login Approved! Entering Desk..."),
+            indicator: 'green'
+        }, 5);
+
+        setTimeout(() => {
+            window.location.replace("/app");
+        }, 800);
     }
 }
 
