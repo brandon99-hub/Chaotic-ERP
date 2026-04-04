@@ -152,48 +152,51 @@ async function initializeDiscovery() {
         });
     }
 
-    document.getElementById('btn-ping-devices').onclick = async () => {
-        const email = document.getElementById('remote-email').value;
-        const password = document.getElementById('hub-password')?.value;
-        if (!email) return frappe.msgprint("Please enter your email");
+    const pingBtn = document.getElementById('btn-ping-devices');
+    if (pingBtn) {
+        pingBtn.onclick = async () => {
+            const email = document.getElementById('remote-email').value;
+            const password = document.getElementById('hub-password')?.value;
+            if (!email) return frappe.msgprint("Please enter your email");
 
-        // If password is present, attempt DIRECT LOCAL LOGIN
-        if (password) {
-            try {
-                actionBtn.disabled = true;
-                actionBtn.innerText = "Verifying Identity...";
-                const deviceId = await getLocalHardwareId();
-                await loginWithHardware(deviceId, email);
-            } catch (err) {
-                frappe.msgprint("Identity Verification Failed: " + err.message);
-                actionBtn.disabled = false;
-                actionBtn.innerText = "Login with Hardware Identity";
+            // If password is present, attempt DIRECT LOCAL LOGIN
+            if (password) {
+                try {
+                    actionBtn.disabled = true;
+                    actionBtn.innerText = "Verifying Identity...";
+                    const deviceId = await getLocalHardwareId();
+                    await loginWithHardware(deviceId, email);
+                } catch (err) {
+                    frappe.msgprint("Identity Verification Failed: " + err.message);
+                    actionBtn.disabled = false;
+                    actionBtn.innerText = "Login with Hardware Identity";
+                }
+                return;
             }
-            return;
-        }
 
-        // Otherwise, fallback to Remote Ping logic
-        const devices = await getRemoteDevicesForUser(email);
-        const container = document.getElementById('remote-devices-container');
-        const listDiv = document.getElementById('remote-device-list');
-        // ... (rest of search logic)
-        
-        container.innerHTML = "";
-        if (devices.length === 0) {
-            container.innerHTML = "<p style='color:red;'>No registered devices found.</p>";
-        } else {
-            devices.forEach(dev => {
-                const btn = document.createElement('button');
-                btn.className = "btn btn-block btn-outline-primary";
-                btn.style.marginBottom = "10px";
-                btn.style.textAlign = "left";
-                btn.innerHTML = `<span style="font-weight:700;">${dev.machine_alias || "Device"}</span><br><span style="font-size:11px;">ID: ${dev.device_id.substring(0,8)}...</span>`;
-                btn.onclick = () => initiateRemotePing(email, dev.device_id, dev.machine_alias);
-                container.appendChild(btn);
-            });
-        }
-        listDiv.style.display = 'block';
-    };
+            // Otherwise, fallback to Remote Ping logic
+            const devices = await getRemoteDevicesForUser(email);
+            const container = document.getElementById('remote-devices-container');
+            const listDiv = document.getElementById('remote-device-list');
+            // ... (rest of search logic)
+            
+            container.innerHTML = "";
+            if (devices.length === 0) {
+                container.innerHTML = "<p style='color:red;'>No registered devices found.</p>";
+            } else {
+                devices.forEach(dev => {
+                    const btn = document.createElement('button');
+                    btn.className = "btn btn-block btn-outline-primary";
+                    btn.style.marginBottom = "10px";
+                    btn.style.textAlign = "left";
+                    btn.innerHTML = `<span style="font-weight:700;">${dev.machine_alias || "Device"}</span><br><span style="font-size:11px;">ID: ${dev.device_id.substring(0,8)}...</span>`;
+                    btn.onclick = () => initiateRemotePing(email, dev.device_id, dev.machine_alias);
+                    container.appendChild(btn);
+                });
+            }
+            if (listDiv) listDiv.style.display = 'block';
+        };
+    }
 }
 
 // --- LOGIN FLOW ---
