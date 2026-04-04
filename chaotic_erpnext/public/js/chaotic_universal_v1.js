@@ -224,7 +224,7 @@ async function loginWithHardware(deviceId, email) {
                 proof: JSON.stringify(signature.proof),
                 attestation_quote: signature.attestation,
                 nonce: challenge.nonce,
-                timestamp: Date.now()
+                timestamp: Math.floor(Date.now() / 1000)
             }
         });
 
@@ -382,7 +382,7 @@ async function finalizeLogin(authData) {
             proof: JSON.stringify(authData.proof),
             attestation_quote: authData.attestation,
             nonce: authData.nonce,
-            timestamp: Date.now()
+            timestamp: Math.floor(Date.now() / 1000)
         }
     });
 

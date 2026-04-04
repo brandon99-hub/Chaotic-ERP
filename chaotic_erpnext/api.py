@@ -59,7 +59,7 @@ def chaotic_get_attestation(user_id, device_id, nonce, srs_id="default_srs_v1"):
         "user_id": user_id, 
         "device_id": device_id, 
         "nonce": str(nonce),
-        "timestamp": time.time(),
+        "timestamp": int(time.time()),
         "srs_id": srs_id
     })
 
