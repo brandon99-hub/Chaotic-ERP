@@ -13,7 +13,7 @@ let currentChallengeId = null;
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log("[Chaotic] Universal Hub Initialized (Bridge-Sync v1.2.4)");
+    console.log("[Chaotic] Universal Hub Initialized (Bridge-Sync v1.2.5)");
     const path = window.location.pathname;
     
     if (path === '/chaotic-auth') {
