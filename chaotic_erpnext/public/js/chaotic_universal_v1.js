@@ -211,6 +211,10 @@ async function loginWithHardware(deviceId, email) {
         });
         const challenge = challengeRes.message;
 
+        if (!challenge || !challenge.success) {
+             throw new Error(challenge?.detail || challenge?.message || "Challenge Failed");
+        }
+
         const signature = await getHardwareSignature(deviceId, email, challenge.nonce);
 
         const response = await frappe.call({
