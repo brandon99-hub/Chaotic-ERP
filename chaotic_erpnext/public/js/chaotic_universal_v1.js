@@ -228,7 +228,14 @@ async function loginWithHardware(deviceId, email) {
             window.location.href = "/app";
         }
     } catch (err) {
-        frappe.msgprint("Login Failed: " + err.message);
+        console.error("[Chaotic Handshake Failure]", err);
+        let errorMsg = "Unknown Handshake Error";
+        if (err.message) errorMsg = err.message;
+        if (err._server_messages) {
+             const messages = JSON.parse(err._server_messages);
+             errorMsg = messages.map(m => JSON.parse(m).message).join(", ");
+        }
+        frappe.msgprint("Login Failed: " + errorMsg);
     }
 }
 
