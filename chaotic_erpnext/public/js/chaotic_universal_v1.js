@@ -13,7 +13,7 @@ let currentChallengeId = null;
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log("[Chaotic] Universal Hub Initialized (Bridge Mode)");
+    console.log("[Chaotic] Universal Hub Initialized (Bridge-Sync D81E)");
     const path = window.location.pathname;
     
     if (path === '/chaotic-auth') {
@@ -93,7 +93,7 @@ async function initializeSignup() {
                 throw new Error(response.message.message || "Sync failure");
             }
         } catch (err) {
-            frappe.msgprint("Signup Failed: " + (err.message || err.exception));
+            frappe.msgprint("[JS-BRIDGE-D81E] Signup Failed: " + (err.message || err.exception));
             btn.disabled = false;
             document.getElementById('btn-text').style.display = 'inline-block';
             document.getElementById('btn-loading').style.display = 'none';
