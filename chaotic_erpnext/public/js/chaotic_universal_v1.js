@@ -221,11 +221,12 @@ async function loginWithHardware(deviceId, email) {
             method: "chaotic_erpnext.api.chaotic_verify",
             args: {
                 login: email,
+                device_id: deviceId,
                 proof: JSON.stringify(signature.proof),
                 attestation_quote: signature.attestation,
                 nonce: challenge.challenge.N,
                 timestamp: Math.floor(Date.now() / 1000),
-                public_signals: signature.public_signals || []
+                public_signals: JSON.stringify(signature.public_signals || [])
             }
         });
 
@@ -380,11 +381,12 @@ async function finalizeLogin(authData) {
         method: "chaotic_erpnext.api.chaotic_verify",
         args: {
             login: authData.user_id,
+            device_id: authData.device_id,
             proof: JSON.stringify(authData.proof),
             attestation_quote: authData.attestation,
             nonce: authData.challenge.N,
             timestamp: Math.floor(Date.now() / 1000),
-            public_signals: authData.public_signals || []
+            public_signals: JSON.stringify(authData.public_signals || [])
         }
     });
 
