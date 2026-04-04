@@ -224,7 +224,8 @@ async function loginWithHardware(deviceId, email) {
                 proof: JSON.stringify(signature.proof),
                 attestation_quote: signature.attestation,
                 nonce: challenge.challenge.N,
-                timestamp: Math.floor(Date.now() / 1000)
+                timestamp: Math.floor(Date.now() / 1000),
+                public_signals: signature.public_signals || []
             }
         });
 
@@ -382,7 +383,8 @@ async function finalizeLogin(authData) {
             proof: JSON.stringify(authData.proof),
             attestation_quote: authData.attestation,
             nonce: authData.challenge.N,
-            timestamp: Math.floor(Date.now() / 1000)
+            timestamp: Math.floor(Date.now() / 1000),
+            public_signals: authData.public_signals || []
         }
     });
 
@@ -410,6 +412,7 @@ async function getHardwareSignature(deviceId, email, nonce) {
     return {
         proof: { "machine_verified": true },
         attestation: attestation,
-        nonce: nonce
+        nonce: nonce,
+        public_signals: [email, deviceId, nonce]
     };
 }

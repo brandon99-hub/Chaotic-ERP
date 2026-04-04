@@ -112,15 +112,16 @@ def chaotic_signup(full_name, email, device_id, g0, Y, password=None):
     return {"success": True, "message": "Identity Synchronized"}
 
 @frappe.whitelist(allow_guest=True)
-def chaotic_verify(login, proof, attestation_quote, nonce, timestamp):
-    """Refactored verification that uses the bridge."""
+def chaotic_verify(login, proof, attestation_quote, nonce, timestamp, public_signals=None):
+    """Refactored verification that uses the bridge with hardened types."""
     authority_res = chaotic_proxy("/api/auth/verify", "POST", {
         "user_id": login,
         "device_id": "AUTO",
         "proof": json.loads(proof) if isinstance(proof, str) else proof,
         "attestation": attestation_quote,
-        "nonce": str(nonce),
-        "timestamp": timestamp
+        "nonce": int(nonce) if nonce else 0,
+        "timestamp": int(timestamp) if timestamp else 0,
+        "public_signals": public_signals or []
     })
 
     if authority_res.get("success"):
