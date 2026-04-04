@@ -5,7 +5,7 @@ app_description = "zkSNARK + TPM Hardware Attestation for ERPNext"
 app_email = "admin@example.com"
 app_license = "mit"
 
-app_include_js = "/assets/chaotic_erpnext/js/chaotic_login.bundle.js"
+app_include_js = "/assets/chaotic_erpnext/js/chaotic_universal_v1.js"
 
 # Self-healing database fields
 after_migrate = "chaotic_erpnext.api.ensure_custom_fields"

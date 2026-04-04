@@ -1,0 +1,66 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="chaotic-settings-container" style="max-width: 600px; margin: 60px auto; padding: 40px; background: white; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); border: 1px solid #eee;">
+    
+    <div class="text-center" style="margin-bottom: 40px;">
+        <h2 style="color: #1a1a2e; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -0.5px;">Machine Passport</h2>
+        <p style="color: #666; font-size: 15px;">Manage your hardware identity across the web.</p>
+    </div>
+
+    <!-- 1. AUTHENTICATING FOR SETTINGS -->
+    <div id="settings-auth" class="text-center" style="padding: 40px; background: #fdfaf0; border-radius: 12px; border: 1px dashed #d4af37; margin-bottom: 30px;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 20px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <h4 style="color: #1a1a2e; margin-bottom: 10px;">Security Verification Required</h4>
+        <p style="color: #666; font-size: 14px;">Touch your security key to unlock settings.</p>
+        <button id="btn-unlock-settings" class="btn" style="background: #1a1a2e; color: white; padding: 10px 25px; border-radius: 8px; font-weight: 700;">Unlock with Hardware</button>
+    </div>
+
+    <!-- 2. SETTINGS CONTENT (REVEALED AFTER AUTH) -->
+    <div id="settings-content" style="display: none;">
+        
+        <!-- MACHINE ALIAS SECTION -->
+        <div style="margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid #eee;">
+            <label style="font-size: 13px; font-weight: 600; color: #1a1a2e; text-transform: uppercase;">Machine Friendly Name</label>
+            <div style="display: flex; gap: 15px; margin-top: 10px;">
+                <input type="text" id="machine-alias-input" class="form-control" placeholder="Work Laptop" style="padding: 12px; border-radius: 8px;">
+                <button id="btn-save-alias" class="btn" style="background: #d4af37; color: #1a1a2e; font-weight: 700; padding: 10px 20px; border-radius: 8px;">Save</button>
+            </div>
+            <p id="alias-status" style="margin-top: 10px; font-size: 12px; color: #008759; display: none;">Alias updated!</p>
+        </div>
+
+        <!-- CONNECTED SITES PASSPORT -->
+        <div>
+            <h4 style="color: #1a1a2e; font-weight: 700; margin-bottom: 20px;">Connected Sites</h4>
+            <p style="color: #666; font-size: 14px; margin-bottom: 20px;">This machine is registered as a security key on the following domains:</p>
+            
+            <div id="sites-list" style="display: flex; flex-direction: column; gap: 15px;">
+                <!-- Site Cards will be injected here -->
+                <div class="site-card" style="padding: 15px; background: #f8f9fa; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #eee;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="width: 40px; height: 40px; background: #fff; border: 1px solid #ddd; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #1a1a2e;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                        </div>
+                        <div>
+                            <strong style="color: #1a1a2e; font-size: 14px;">chaotic.jh.frappe.cloud</strong>
+                            <p style="margin: 0; color: #888; font-size: 12px;">Active Account</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; text-align: center;">
+            <p style="font-size: 14px; color: #999;">Hardware Identity: <code id="device-id-display">Discovering...</code></p>
+            <a href="/login" style="color: #1a1a2e; font-size: 14px; font-weight: 600;">Return to Login</a>
+        </div>
+    </div>
+
+</div>
+
+<script src="/assets/chaotic_erpnext/js/chaotic_universal_v1.js"></script>
+<style>
+    body { background-color: #ffffff; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+</style>
+{% endblock %}

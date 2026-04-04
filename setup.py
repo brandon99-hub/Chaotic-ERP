@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
 	name='chaotic_erpnext',
-	version='0.0.1',
+	version='0.0.3',
 	description='zkSNARK + TPM Hardware Attestation for ERPNext',
 	author='Chaotic Team',
 	author_email='admin@example.com',

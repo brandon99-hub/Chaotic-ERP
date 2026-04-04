@@ -1,0 +1,47 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="login-content" style="max-width: 400px; margin: 80px auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #f0f0f0;">
+    <div class="text-center" style="margin-bottom: 30px;">
+        <h2 style="color: #1a1a2e; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 24px;">Login to Frappe</h2>
+        <p style="color: #666; font-size: 14px;">Secure access powered by Chaotic</p>
+    </div>
+
+    <!-- The Machine Identity Button -->
+    <div style="margin-bottom: 25px;">
+        <a href="/chaotic-auth" id="chaotic-login-btn" class="btn btn-block" style="background: #1a1a2e; color: white; padding: 12px; border-radius: 8px; font-weight: 600; transition: all 0.3s; display: block; text-align: center; text-decoration: none; border: 2px solid #1a1a2e;">
+            <span style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #d4af37;"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                Login with Secure Hardware
+            </span>
+        </a>
+    </div>
+
+    <div style="display: flex; align-items: center; margin-bottom: 25px;">
+        <hr style="flex-grow: 1; border: 0; border-top: 1px solid #eee;">
+        <span style="padding: 0 15px; color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">or use password</span>
+        <hr style="flex-grow: 1; border: 0; border-top: 1px solid #eee;">
+    </div>
+
+    <form class="form-signin" role="form">
+        <div class="form-group" style="margin-bottom: 15px;">
+            <input type="text" id="login_email" class="form-control" placeholder="Email Address" required autofocus style="padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
+        </div>
+        <div class="form-group" style="margin-bottom: 20px;">
+            <input type="password" id="login_password" class="form-control" placeholder="Password" required style="padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
+        </div>
+        <button class="btn btn-block btn-primary btn-login" type="submit" style="padding: 12px; border-radius: 8px; font-weight: 600; background: #f8f9fa; color: #1a1a2e; border: 1px solid #ddd;">
+            Sign in
+        </button>
+    </form>
+
+    <div class="text-center" style="margin-top: 25px;">
+        <p style="font-size: 14px; color: #666;">New to this site? <a href="/chaotic-signup" style="color: #d4af37; font-weight: 600; text-decoration: none;">Sign up with Hardware</a></p>
+    </div>
+</div>
+
+<style>
+    body { background-color: #ffffff !important; }
+    #chaotic-login-btn:hover { background: #d4af37 !important; border-color: #d4af37 !important; color: #1a1a2e !important; }
+</style>
+{% endblock %}

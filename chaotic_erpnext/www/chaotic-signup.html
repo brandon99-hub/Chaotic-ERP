@@ -1,0 +1,55 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="chaotic-signup-container" style="max-width: 450px; margin: 80px auto; padding: 40px; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(26,26,46,0.1); border: 1px solid #f0f0f0;">
+    
+    <div class="text-center" style="margin-bottom: 40px;">
+        <div style="background: #fdfaf0; width: 60px; height: 60px; border-radius: 30px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; border: 1px solid #d4af37;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+        </div>
+        <h2 style="color: #1a1a2e; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 26px; letter-spacing: -0.5px;">Create Secure Account</h2>
+        <p style="color: #666; font-size: 15px;">Your hardware is your identity.</p>
+    </div>
+
+    <!-- The Sign Up Form -->
+    <div id="signup-form">
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label style="font-size: 13px; font-weight: 600; color: #1a1a2e; text-transform: uppercase;">Full Name</label>
+            <input type="text" id="signup-name" class="form-control" placeholder="John Doe" required style="padding: 12px; border-radius: 8px;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 25px;">
+            <label style="font-size: 13px; font-weight: 600; color: #1a1a2e; text-transform: uppercase;">Email Address</label>
+            <input type="email" id="signup-email" class="form-control" placeholder="john@example.com" required style="padding: 12px; border-radius: 8px;">
+        </div>
+
+        <button id="btn-signup-hardware" class="btn btn-block" style="background: #1a1a2e; color: white; padding: 15px; border-radius: 10px; font-weight: 700; font-size: 16px;">
+            <span id="btn-text">Sign Up with Secure Hardware</span>
+            <span id="btn-loading" style="display: none;"><div class="spinner-border spinner-border-sm" role="status"></div> Finalizing...</span>
+        </button>
+
+        <p style="margin-top: 20px; font-size: 12px; color: #888; text-align: center;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #d4af37; margin-bottom: -2px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            This process binds your local TPM chip to this site.
+        </p>
+    </div>
+
+    <!-- SUCCESS STATE (Directly Redirects, but shown for a split second) -->
+    <div id="success-message" style="display: none; text-align: center;">
+        <div style="background: #d4fced; color: #00875a; padding: 20px; border-radius: 12px; margin-bottom: 30px;">
+            <p style="margin: 0;"><strong>Success!</strong> Your account is created.</p>
+        </div>
+        <p style="color: #666;">Account established for <strong id="success-email">email</strong>.<br>Redirecting to login...</p>
+    </div>
+
+    <div class="text-center" style="margin-top: 30px;">
+        <p style="font-size: 14px; color: #666;">Already have an account? <a href="/login" style="color: #1a1a2e; font-weight: 700;">Login Instead</a></p>
+    </div>
+</div>
+
+<style>
+    body { background-color: #ffffff; }
+    #btn-signup-hardware:hover { background: #d4af37 !important; color: #1a1a2e !important; transform: translateY(-2px); }
+</style>
+<script src="/assets/chaotic_erpnext/js/chaotic_universal_v1.js"></script>
+{% endblock %}

@@ -2,6 +2,7 @@ import frappe
 import requests
 import json
 from frappe.auth import LoginManager
+from frappe import _
 
 @frappe.whitelist(allow_guest=True)
 def chaotic_verify(login, proof, attestation_quote, nonce, timestamp):
@@ -75,6 +76,58 @@ def chaotic_register_device(device_id):
     except Exception as e:
         frappe.log_error(frappe.get_traceback(), "Chaotic Registration Error")
         return {"success": False, "message": str(e)}
+
+@frappe.whitelist(allow_guest=True)
+def chaotic_signup(full_name, email, device_id):
+    """
+    Creates a new Frappe User and simultaneously enrolls their hardware
+    with the local Chaotic Authority.
+    """
+    # 1. Create the Frappe User if they don't exist
+    if not frappe.db.exists("User", email):
+        user = frappe.get_doc({
+            "doctype": "User",
+            "email": email,
+            "first_name": full_name,
+            "send_welcome_email": 0,
+            "enabled": 1,
+            "user_type": "System User",
+            "roles": [{"role": "System User"}]
+        })
+        user.insert(ignore_permissions=True)
+    
+    # 2. Bind the Hardware ID to the User Doc
+    frappe.db.set_value("User", email, "chaotic_device_id", device_id)
+    frappe.db.commit()
+
+    # 3. Enroll the device in the FastAPI Authority
+    base_url = frappe.conf.get("chaotic_api_url", "http://localhost:8000")
+    fastapi_url = f"{base_url.rstrip('/')}/api/devices/enroll"
+    
+    try:
+        response = requests.post(fastapi_url, json={
+            "user_id": email,
+            "device_id": device_id
+        }, timeout=10)
+        
+        if response.status_code == 200:
+            return {"success": True, "message": f"Account Created for {email}"}
+        else:
+            return {"success": False, "message": "Hardware Enrollment Failed"}
+            
+    except Exception as e:
+        return {"success": False, "message": f"Connection to Chaotic Hub failed: {str(e)}"}
+
+@frappe.whitelist(allow_guest=True)
+def chaotic_discover(device_id):
+    """
+    Returns the user account linked to a specific device ID.
+    Used by the Discovery Hub to show the 'Account Card'.
+    """
+    user = frappe.db.get_value("User", {"chaotic_device_id": device_id}, ["name", "full_name"], as_dict=True)
+    if user:
+        return {"success": True, "user_id": user.name, "full_name": user.full_name}
+    return {"success": False, "message": "Device not recognized"}
 
 def ensure_custom_fields():
     """
