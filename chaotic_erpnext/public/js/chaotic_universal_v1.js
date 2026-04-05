@@ -236,9 +236,13 @@ async function loginWithHardware(deviceId, email) {
                 indicator: 'green'
             }, 5);
             
+            const target = response.message.redirect || "/app";
             setTimeout(() => {
-                window.location.replace("/app");
+                window.location.replace(target);
             }, 800);
+        } else {
+            const errMsg = (response.message && response.message.message) || "Login verification failed";
+            frappe.msgprint("[Chaotic Auth] Login Failed: " + errMsg);
         }
     } catch (err) {
         console.error("[Chaotic Handshake Failure]", err);

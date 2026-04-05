@@ -156,17 +156,19 @@ def chaotic_verify(login, proof, attestation_quote, nonce, timestamp, public_sig
         "public_signals": public_signals or []
     })
 
-    if authority_res.get("status") == "success":
+    # The backend verify returns {"success": True, ...} — NOT {"status": "success"}
+    if authority_res.get("success") == True:
         # Muzzle the auto-redirect and return pure JSON for AJAX
         login_manager = LoginManager()
         login_manager.run_post_login_hooks = False
         login_manager.login_as(login)
-        
-        # Explicit return to stop the 302 redirect in the background
+
+        # Explicitly stop Frappe issuing a 302 redirect on top of our JSON
         frappe.response["type"] = "json"
-        return {"success": True, "message": "Authenticated"}
-    
-    return {"success": False, "message": authority_res.get("error", "Verification Failed")}
+        frappe.response["location"] = "/app"  # Client will honour this redirect field
+        return {"success": True, "message": "Authenticated", "redirect": "/app"}
+
+    return {"success": False, "message": authority_res.get("error", authority_res.get("message", "Verification Failed"))}
 
 @frappe.whitelist(allow_guest=True)
 def chaotic_discover(device_id):
