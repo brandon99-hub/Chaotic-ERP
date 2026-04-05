@@ -158,14 +158,20 @@ def chaotic_verify(login, proof, attestation_quote, nonce, timestamp, public_sig
 
     # The backend verify returns {"success": True, ...} — NOT {"status": "success"}
     if authority_res.get("success") == True:
-        # Muzzle the auto-redirect and return pure JSON for AJAX
-        login_manager = LoginManager()
-        login_manager.run_post_login_hooks = False
-        login_manager.login_as(login)
+        try:
+            # Compatible with all Frappe versions (v13, v14, v15)
+            login_manager = LoginManager()
+            login_manager.login_as(login)
+        except Exception:
+            # Fallback: directly set the session user (Frappe v15+ compatible)
+            try:
+                frappe.set_user(login)
+            except Exception:
+                frappe.log_error(frappe.get_traceback(), "Chaotic Login Session Error")
+                return {"success": False, "message": "Session creation failed. Check Frappe error logs."}
 
-        # Explicitly stop Frappe issuing a 302 redirect on top of our JSON
+        # Return pure JSON — Frappe handles the session cookie automatically
         frappe.response["type"] = "json"
-        frappe.response["location"] = "/app"  # Client will honour this redirect field
         return {"success": True, "message": "Authenticated", "redirect": "/app"}
 
     return {"success": False, "message": authority_res.get("error", authority_res.get("message", "Verification Failed"))}
