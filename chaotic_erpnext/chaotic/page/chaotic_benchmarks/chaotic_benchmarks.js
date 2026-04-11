@@ -101,7 +101,9 @@ frappe.pages['chaotic-benchmarks'].on_page_load = function(wrapper) {
 }
 </style>
 `;
-	$(templateHtml).appendTo(page.main);
+	let renderTarget = page.body || $(wrapper).find('.layout-main-section');
+	if (renderTarget.length === 0) renderTarget = $(wrapper);
+	$(templateHtml).appendTo(renderTarget);
 
 	// Initialize dashboard
 	const dashboard = new ChaoticBenchmarkDashboard(wrapper);
