@@ -1,0 +1,20 @@
+{
+ "content": "<h1>Auth Benchmarks</h1>",
+ "creation": "2026-04-11 11:10:00.000000",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2026-04-11 11:10:00.000000",
+ "modified_by": "Administrator",
+ "module": "Chaotic Hardware Authentication",
+ "name": "chaotic-benchmarks",
+ "owner": "Administrator",
+ "page_name": "chaotic-benchmarks",
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ],
+ "standard": "Yes",
+ "title": "Auth Benchmarks"
+}

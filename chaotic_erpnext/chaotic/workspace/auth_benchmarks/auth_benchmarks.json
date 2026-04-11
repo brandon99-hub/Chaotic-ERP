@@ -1,0 +1,23 @@
+{
+ "charts": [],
+ "content": "[{\"type\":\"Shortcut\",\"data\":{\"label\":\"Auth Benchmarks\",\"icon\":\"chart-bar\",\"link_to\":\"chaotic-benchmarks\",\"type\":\"Page\",\"color\":\"#1a1a2e\"}}]",
+ "creation": "2026-04-11 11:12:00.000000",
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "icon": "chart-line",
+ "idx": 0,
+ "is_standard": 1,
+ "label": "Auth Benchmarks",
+ "modified": "2026-04-11 11:12:00.000000",
+ "modified_by": "Administrator",
+ "module": "Chaotic",
+ "name": "Auth Benchmarks",
+ "owner": "Administrator",
+ "public": 1,
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ],
+ "title": "Auth Benchmarks"
+}

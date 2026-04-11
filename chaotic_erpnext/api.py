@@ -192,6 +192,16 @@ def chaotic_discover(device_id):
     return {"success": False}
 
 @frappe.whitelist()
+def get_chaotic_benchmarks():
+    """Returns analytics and comparison data for the Benchmark Dashboard."""
+    return chaotic_proxy("/api/benchmarks", "GET")
+
+@frappe.whitelist()
+def get_chaotic_health():
+    """Bridge for the healthy status indicator on the dashboard."""
+    return chaotic_proxy("/api/health", "GET")
+
+@frappe.whitelist()
 def ensure_custom_fields():
     """Self-healing: Ensures User DocType has ZK fields."""
     from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
