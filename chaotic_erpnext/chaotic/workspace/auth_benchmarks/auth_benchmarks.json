@@ -13,6 +13,9 @@
  "module": "Chaotic",
  "name": "Auth Benchmarks",
  "owner": "Administrator",
+ "parent_page": "",
+ "category": "Modules",
+ "sequence_id": 1.0,
  "public": 1,
  "roles": [
   {
