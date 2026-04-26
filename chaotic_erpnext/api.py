@@ -81,8 +81,11 @@ def chaotic_poll_remote(challenge_id):
 
 @frappe.whitelist(allow_guest=True)
 def chaotic_signup(full_name, email, device_id, g0, Y, password=None):
-    """Refactored signup that uses the bridge. Bulletproof against cloud validation errors."""
-    # 1. Register with Local Authority via Bridge (the real source of truth)
+    """
+    Synchronized signup that supports linking existing Frappe users to Chaotic IDs.
+    Idempotent and safe for multi-service architectures.
+    """
+    # 1. Register/Link with Local Authority via Bridge
     authority_res = chaotic_proxy("/api/register", "POST", {
         "hr_id": email,
         "g0": g0,
@@ -93,10 +96,12 @@ def chaotic_signup(full_name, email, device_id, g0, Y, password=None):
     if not authority_res.get("success"):
         return {"success": False, "message": authority_res.get("detail", "Authority Registration Failed")}
 
-    # 2. Create or update Frappe User
+    # 2. Check for existing Frappe User
+    user_exists = frappe.db.exists("User", email)
+    
     try:
-        if not frappe.db.exists("User", email):
-            # Split first/last name robustly
+        if not user_exists:
+            # Create new Frappe User if they don't exist
             name_parts = (full_name or "").strip().split(" ", 1)
             first_name = name_parts[0] or email.split("@")[0]
             last_name = name_parts[1] if len(name_parts) > 1 else ""
@@ -113,8 +118,12 @@ def chaotic_signup(full_name, email, device_id, g0, Y, password=None):
             })
             user.insert(ignore_permissions=True)
             frappe.db.commit()
+            sync_message = "Identity Created"
+        else:
+            # User exists — we are in "Link" mode
+            sync_message = "Identity Synchronized (Existing Account)"
         
-        # 3. Safely persist ZK commitment fields (non-blocking — custom fields may not exist yet)
+        # 3. Always ensure ZK commitment fields are updated on the Frappe record
         try:
             frappe.db.set_value("User", email, {
                 "chaotic_g0": str(g0),
@@ -122,17 +131,14 @@ def chaotic_signup(full_name, email, device_id, g0, Y, password=None):
             }, update_modified=False)
             frappe.db.commit()
         except Exception:
-            # Custom fields not provisioned yet — authority still has the data, non-fatal
-            frappe.log_error(frappe.get_traceback(), "Chaotic ZK Field Update (Non-Fatal)")
+            # Custom fields not provisioned yet — non-fatal as Authority has the data
+            frappe.log_error(frappe.get_traceback(), "Chaotic ZK Field Sync Failure")
 
-    except frappe.exceptions.DuplicateEntryError:
-        # User already exists — treat as success (idempotent)
-        pass
     except Exception:
-        frappe.log_error(frappe.get_traceback(), "Chaotic Signup - Frappe User Creation")
-        return {"success": False, "message": "Account was registered on the authority but Frappe user creation failed. Check error logs."}
+        frappe.log_error(frappe.get_traceback(), "Chaotic Signup - Sync Failure")
+        return {"success": False, "message": "Authority updated, but Frappe synchronization failed. Check logs."}
 
-    return {"success": True, "message": "Identity Synchronized"}
+    return {"success": True, "message": sync_message, "linked": user_exists}
 
 @frappe.whitelist(allow_guest=True)
 def chaotic_verify(login, proof, attestation_quote, nonce, timestamp, public_signals=None, device_id=None):
